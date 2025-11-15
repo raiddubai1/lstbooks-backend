@@ -1,0 +1,25 @@
+import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+const questionSchema = new mongoose.Schema({
+  id: { type: String, default: () => uuidv4() }, // Unique ID for each question
+  questionText: { type: String, required: true },
+  type: { type: String, enum: ['MCQ', 'ShortAnswer'], required: true },
+  options: [String], // For MCQ type
+  answer: { type: String, required: true },
+  points: { type: Number, default: 1 }, // Points for this question
+  resources: [String] // Array of resource links
+});
+
+const quizSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  subjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true },
+  questions: [questionSchema],
+  timeLimit: { type: Number, default: null }, // Time limit in seconds (null = no limit)
+  shuffleQuestions: { type: Boolean, default: false } // Whether to shuffle questions for each attempt
+}, {
+  timestamps: true
+});
+
+export default mongoose.model('Quiz', quizSchema);
+
