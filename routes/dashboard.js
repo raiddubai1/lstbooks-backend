@@ -1,8 +1,32 @@
 import express from 'express';
 import Quiz from '../models/Quiz.js';
 import QuizAttempt from '../models/QuizAttempt.js';
+import Book from '../models/Book.js';
+import User from '../models/User.js';
+import Subject from '../models/Subject.js';
 
 const router = express.Router();
+
+// Get overall dashboard statistics
+router.get('/', async (req, res) => {
+  try {
+    const [totalBooks, totalUsers, totalQuizzes, totalSubjects] = await Promise.all([
+      Book.countDocuments(),
+      User.countDocuments(),
+      Quiz.countDocuments(),
+      Subject.countDocuments()
+    ]);
+
+    res.json({
+      totalBooks,
+      totalUsers,
+      totalQuizzes,
+      totalSubjects
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Get overview of all quizzes with stats
 router.get('/quiz/overview', async (req, res) => {
