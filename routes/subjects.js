@@ -6,9 +6,15 @@ import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 const router = express.Router();
 
 // Get all subjects (public - no auth required)
+// Supports filtering by yearId: /api/subjects?yearId=xxx
 router.get('/', async (req, res) => {
   try {
-    const subjects = await Subject.find().sort({ createdAt: -1 });
+    const { yearId } = req.query;
+    const query = yearId ? { yearId } : {};
+
+    const subjects = await Subject.find(query)
+      .populate('yearId', 'name displayName order')
+      .sort({ createdAt: -1 });
     res.json(subjects);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -18,7 +24,8 @@ router.get('/', async (req, res) => {
 // Get subject by ID
 router.get('/:id', async (req, res) => {
   try {
-    const subject = await Subject.findById(req.params.id);
+    const subject = await Subject.findById(req.params.id)
+      .populate('yearId', 'name displayName order');
     if (!subject) {
       return res.status(404).json({ error: 'Subject not found' });
     }
@@ -31,7 +38,7 @@ router.get('/:id', async (req, res) => {
 // Create new subject (teacher or admin only)
 router.post('/', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
-    const { name, description, resources } = req.body;
+    const { name, description, resources, yearId } = req.body;
 
     // Validation
     if (!name || !description) {
@@ -41,7 +48,8 @@ router.post('/', authenticate, requireTeacherOrAdmin, async (req, res) => {
     const subject = new Subject({
       name,
       description,
-      resources: resources || []
+      resources: resources || [],
+      yearId: yearId || null
     });
 
     await subject.save();

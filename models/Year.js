@@ -89,7 +89,7 @@ yearSchema.methods.updateStats = async function() {
   const Quiz = mongoose.model('Quiz');
   const Flashcard = mongoose.model('Flashcard');
   const Lab = mongoose.model('Lab');
-  const OSCE = mongoose.model('OSCE');
+  const OSCEStation = mongoose.model('OSCEStation');
   const Skill = mongoose.model('Skill');
 
   const subjects = await Subject.find({ yearId: this._id });
@@ -99,7 +99,7 @@ yearSchema.methods.updateStats = async function() {
   this.stats.totalQuizzes = await Quiz.countDocuments({ subjectId: { $in: subjectIds } });
   this.stats.totalFlashcards = await Flashcard.countDocuments({ subjectId: { $in: subjectIds } });
   this.stats.totalLabs = await Lab.countDocuments({ subjectId: { $in: subjectIds } });
-  this.stats.totalOSCE = await OSCE.countDocuments({ subjectId: { $in: subjectIds } });
+  this.stats.totalOSCE = await OSCEStation.countDocuments({ subjectId: { $in: subjectIds } });
   this.stats.totalSkills = await Skill.countDocuments({ subjectId: { $in: subjectIds } });
 
   await this.save();
