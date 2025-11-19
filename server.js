@@ -16,6 +16,7 @@ import progressRoutes from './routes/progress.js';
 import searchRoutes from './routes/search.js';
 import dashboardRoutes from './routes/dashboard.js';
 import bookRoutes from './routes/books.js';
+import noteRoutes from './routes/notes.js';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/api/notes', noteRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
