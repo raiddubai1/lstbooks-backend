@@ -24,6 +24,7 @@ import studyGroupRoutes from './routes/studyGroups.js';
 import peerReviewRoutes from './routes/peerReviews.js';
 import sharedResourceRoutes from './routes/sharedResources.js';
 import aiChatRoutes from './routes/aiChat.js';
+import gamificationRoutes from './routes/gamification.js';
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ app.use('/api/study-groups', studyGroupRoutes);
 app.use('/api/peer-reviews', peerReviewRoutes);
 app.use('/api/shared-resources', sharedResourceRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
+app.use('/api/gamification', gamificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
