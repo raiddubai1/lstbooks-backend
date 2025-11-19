@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 // Import routes
+import yearRoutes from './routes/years.js';
 import subjectRoutes from './routes/subjects.js';
 import quizRoutes from './routes/quizzes.js';
 import flashcardRoutes from './routes/flashcards.js';
@@ -32,6 +33,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 // Routes
+app.use('/api/years', yearRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/flashcards', flashcardRoutes);
