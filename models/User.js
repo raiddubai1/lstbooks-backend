@@ -20,15 +20,42 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  role: {
+    type: String,
+    enum: ['student', 'teacher', 'admin'],
+    default: 'student',
+    required: true
+  },
   year: Number,
   university: String,
   avatar: String,
+  // Teacher-specific fields
+  teacherProfile: {
+    specialization: String,
+    bio: String,
+    qualifications: [String],
+    yearsOfExperience: Number,
+    subjectsTeaching: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subject' }]
+  },
+  // Admin-specific fields
+  adminProfile: {
+    permissions: {
+      manageUsers: { type: Boolean, default: true },
+      manageContent: { type: Boolean, default: true },
+      viewAnalytics: { type: Boolean, default: true },
+      manageSettings: { type: Boolean, default: true }
+    }
+  },
   bookmarks: [bookmarkSchema],
   notes: [noteSchema],
   preferences: {
     theme: { type: String, default: 'light' },
     notifications: { type: Boolean, default: true }
-  }
+  },
+  // Account status
+  isActive: { type: Boolean, default: true },
+  isVerified: { type: Boolean, default: false },
+  lastLogin: Date
 }, {
   timestamps: true
 });
