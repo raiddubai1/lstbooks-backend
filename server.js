@@ -19,6 +19,7 @@ import bookRoutes from './routes/books.js';
 import noteRoutes from './routes/notes.js';
 import bookmarkRoutes from './routes/bookmarks.js';
 import reminderRoutes from './routes/reminders.js';
+import discussionRoutes from './routes/discussions.js';
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use('/api/books', bookRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/reminders', reminderRoutes);
+app.use('/api/discussions', discussionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
