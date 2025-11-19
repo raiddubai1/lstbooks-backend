@@ -2,6 +2,8 @@ import express from 'express';
 import Quiz from '../models/Quiz.js';
 import QuizAttempt from '../models/QuizAttempt.js';
 import { v4 as uuidv4 } from 'uuid';
+import { authenticate, optionalAuth } from '../middleware/auth.js';
+import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 
 const router = express.Router();
 
@@ -78,8 +80,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new quiz
-router.post('/', async (req, res) => {
+// Create new quiz (teacher or admin only)
+router.post('/', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { title, subjectId, questions } = req.body;
 
@@ -102,8 +104,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update quiz
-router.put('/:id', async (req, res) => {
+// Update quiz (teacher or admin only)
+router.put('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { title, subjectId, questions } = req.body;
 
@@ -123,8 +125,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete quiz
-router.delete('/:id', async (req, res) => {
+// Delete quiz (teacher or admin only)
+router.delete('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const quiz = await Quiz.findByIdAndDelete(req.params.id);
 
@@ -167,8 +169,8 @@ router.post('/:id/check-answer', async (req, res) => {
 
 // ========== ADVANCED QUIZ ENDPOINTS ==========
 
-// Start a new quiz attempt
-router.post('/:id/start', async (req, res) => {
+// Start a new quiz attempt (authenticated users only)
+router.post('/:id/start', authenticate, async (req, res) => {
   try {
     const { userId } = req.body;
     const quiz = await Quiz.findById(req.params.id);

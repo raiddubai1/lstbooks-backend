@@ -1,5 +1,7 @@
 import express from 'express';
 import Lab from '../models/Lab.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 
 const router = express.Router();
 
@@ -33,8 +35,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new lab
-router.post('/', async (req, res) => {
+// Create new lab (teacher or admin only)
+router.post('/', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { title, subjectId, description, steps } = req.body;
 
@@ -58,8 +60,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update lab
-router.put('/:id', async (req, res) => {
+// Update lab (teacher or admin only)
+router.put('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { title, subjectId, description, steps, completedBy } = req.body;
 
@@ -79,8 +81,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete lab
-router.delete('/:id', async (req, res) => {
+// Delete lab (teacher or admin only)
+router.delete('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const lab = await Lab.findByIdAndDelete(req.params.id);
 

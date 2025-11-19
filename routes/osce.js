@@ -1,5 +1,7 @@
 import express from 'express';
 import OSCEStation from '../models/OSCE.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 
 const router = express.Router();
 
@@ -35,8 +37,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new OSCE station
-router.post('/', async (req, res) => {
+// Create new OSCE station (teacher or admin only)
+router.post('/', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { title, subjectId, skills, description, steps } = req.body;
 
@@ -62,8 +64,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update OSCE station
-router.put('/:id', async (req, res) => {
+// Update OSCE station (teacher or admin only)
+router.put('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { title, subjectId, skills, description, steps } = req.body;
 
@@ -85,8 +87,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete OSCE station
-router.delete('/:id', async (req, res) => {
+// Delete OSCE station (teacher or admin only)
+router.delete('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const station = await OSCEStation.findByIdAndDelete(req.params.id);
 

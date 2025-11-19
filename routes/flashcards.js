@@ -1,5 +1,7 @@
 import express from 'express';
 import Flashcard from '../models/Flashcard.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 
 const router = express.Router();
 
@@ -33,8 +35,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new flashcard
-router.post('/', async (req, res) => {
+// Create new flashcard (teacher or admin only)
+router.post('/', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { question, answer, subjectId } = req.body;
 
@@ -56,8 +58,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update flashcard
-router.put('/:id', async (req, res) => {
+// Update flashcard (teacher or admin only)
+router.put('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { question, answer, subjectId } = req.body;
 
@@ -77,8 +79,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete flashcard
-router.delete('/:id', async (req, res) => {
+// Delete flashcard (teacher or admin only)
+router.delete('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const flashcard = await Flashcard.findByIdAndDelete(req.params.id);
 

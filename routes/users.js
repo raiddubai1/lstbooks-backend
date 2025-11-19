@@ -1,6 +1,8 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireAdmin, requireOwnerOrAdmin } from '../middleware/roleAuth.js';
 
 const router = express.Router();
 
@@ -91,8 +93,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Add bookmark
-router.post('/:userId/bookmarks', async (req, res) => {
+// Add bookmark (authenticated users only - own bookmarks)
+router.post('/:userId/bookmarks', authenticate, async (req, res) => {
   try {
     const { type, itemId, note } = req.body;
     const user = await User.findById(req.params.userId);
@@ -106,8 +108,8 @@ router.post('/:userId/bookmarks', async (req, res) => {
   }
 });
 
-// Get user bookmarks
-router.get('/:userId/bookmarks', async (req, res) => {
+// Get user bookmarks (authenticated users only - own bookmarks)
+router.get('/:userId/bookmarks', authenticate, async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
     res.json(user.bookmarks);
@@ -116,8 +118,8 @@ router.get('/:userId/bookmarks', async (req, res) => {
   }
 });
 
-// Add/Update note
-router.post('/:userId/notes', async (req, res) => {
+// Add/Update note (authenticated users only - own notes)
+router.post('/:userId/notes', authenticate, async (req, res) => {
   try {
     const { type, itemId, content } = req.body;
     const user = await User.findById(req.params.userId);
@@ -138,11 +140,9 @@ router.post('/:userId/notes', async (req, res) => {
 });
 
 // Admin-only: Create teacher or admin account
-router.post('/admin/create-user', async (req, res) => {
+router.post('/admin/create-user', authenticate, requireAdmin, async (req, res) => {
   try {
     const { name, email, password, role, teacherProfile, adminProfile } = req.body;
-
-    // This route should be protected by admin middleware in server.js
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -189,7 +189,7 @@ router.post('/admin/create-user', async (req, res) => {
 });
 
 // Get all users (admin only)
-router.get('/admin/users', async (req, res) => {
+router.get('/admin/users', authenticate, requireAdmin, async (req, res) => {
   try {
     const { role, search, page = 1, limit = 20 } = req.query;
 
@@ -222,7 +222,7 @@ router.get('/admin/users', async (req, res) => {
 });
 
 // Update user role/status (admin only)
-router.patch('/admin/users/:userId', async (req, res) => {
+router.patch('/admin/users/:userId', authenticate, requireAdmin, async (req, res) => {
   try {
     const { role, isActive, isVerified } = req.body;
     const user = await User.findById(req.params.userId);

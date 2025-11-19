@@ -1,9 +1,11 @@
 import express from 'express';
 import Subject from '../models/Subject.js';
+import { authenticate, optionalAuth } from '../middleware/auth.js';
+import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 
 const router = express.Router();
 
-// Get all subjects
+// Get all subjects (public - no auth required)
 router.get('/', async (req, res) => {
   try {
     const subjects = await Subject.find().sort({ createdAt: -1 });
@@ -26,8 +28,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new subject
-router.post('/', async (req, res) => {
+// Create new subject (teacher or admin only)
+router.post('/', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { name, description, resources } = req.body;
 
@@ -49,8 +51,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update subject
-router.put('/:id', async (req, res) => {
+// Update subject (teacher or admin only)
+router.put('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const { name, description, resources } = req.body;
 
@@ -70,8 +72,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete subject
-router.delete('/:id', async (req, res) => {
+// Delete subject (teacher or admin only)
+router.delete('/:id', authenticate, requireTeacherOrAdmin, async (req, res) => {
   try {
     const subject = await Subject.findByIdAndDelete(req.params.id);
 
