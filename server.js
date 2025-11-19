@@ -21,6 +21,7 @@ import bookmarkRoutes from './routes/bookmarks.js';
 import reminderRoutes from './routes/reminders.js';
 import discussionRoutes from './routes/discussions.js';
 import studyGroupRoutes from './routes/studyGroups.js';
+import peerReviewRoutes from './routes/peerReviews.js';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use('/api/bookmarks', bookmarkRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/discussions', discussionRoutes);
 app.use('/api/study-groups', studyGroupRoutes);
+app.use('/api/peer-reviews', peerReviewRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
