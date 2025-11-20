@@ -1,18 +1,63 @@
 # AI Study Assistant Setup Guide
 
-## 🤖 OpenAI API Integration
+## 🤖 AI Integration - Google Gemini (FREE) & OpenAI
 
-The AI Study Assistant now uses **OpenAI's GPT-4o-mini** model to provide real, intelligent responses to student questions.
+The AI Study Assistant now supports **TWO AI providers**:
+1. **Google Gemini** (FREE - 1500 requests/day) - **Currently Active** ✅
+2. **OpenAI GPT-4o-mini** (Paid - Pay-as-you-go) - Optional upgrade
 
----
-
-## 📋 Prerequisites
-
-You need an **OpenAI API key** to enable the AI features.
+**Your system is currently configured to use Google Gemini for FREE!** 🎉
 
 ---
 
-## 🔑 How to Get Your OpenAI API Key
+## ✅ Current Status
+
+**Your Gemini API key is already configured!** The AI Study Assistant is ready to use.
+
+To test it:
+1. Go to the AI Study Assistant page
+2. Create a new chat
+3. Ask any dental-related question
+4. Get intelligent responses powered by Google Gemini!
+
+---
+
+## 🆓 Google Gemini (Current Provider)
+
+**Already Configured!** Your API key: `AIzaSyApwkifky2K9gVyUc-rU9qo3MvSZ2DapXo`
+
+**Free Tier Benefits:**
+- ✅ **1,500 requests per day** - FREE forever
+- ✅ **15 requests per minute**
+- ✅ **1 million tokens per month**
+- ✅ **No credit card required**
+- ✅ **No expiration**
+
+**Model:** Gemini 1.5 Flash (Fast and intelligent)
+
+---
+
+## 💰 Pricing Comparison
+
+### Google Gemini (Current)
+- **FREE**: 1,500 requests/day
+- **Cost**: $0.00
+- **Quality**: ⭐⭐⭐⭐⭐ Excellent
+
+### OpenAI GPT-4o-mini (Optional)
+- **Paid**: Pay-as-you-go
+- **Cost**: ~$0.50-$2.00 per 100 requests
+- **Quality**: ⭐⭐⭐⭐⭐ Excellent
+
+**Recommendation**: Stick with Gemini unless you need more than 1,500 requests/day!
+
+---
+
+## 🔄 How to Switch to OpenAI (Optional)
+
+If you want to upgrade to OpenAI later:
+
+### Step 1: Get OpenAI API Key
 
 ### Step 1: Create an OpenAI Account
 1. Go to [https://platform.openai.com/signup](https://platform.openai.com/signup)
@@ -32,14 +77,18 @@ You need an **OpenAI API key** to enable the AI features.
 4. **IMPORTANT**: Copy the key immediately - you won't be able to see it again!
 5. Store it securely
 
-### Step 4: Add API Key to Your Project
+### Step 4: Configure Your Backend
 1. Open `backend/.env` file
-2. Replace `your_openai_api_key_here` with your actual API key:
+2. Change the AI provider:
+   ```
+   AI_PROVIDER=openai
+   ```
+3. Add your OpenAI API key:
    ```
    OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    ```
-3. Save the file
-4. Restart your backend server
+4. Save the file
+5. Restart your backend server
 
 ---
 
