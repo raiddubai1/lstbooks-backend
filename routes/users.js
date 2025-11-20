@@ -9,24 +9,40 @@ const router = express.Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, year, university, role } = req.body;
+    const { name, email, password, year, university, role, specialization, bio } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    // Default role is student, only allow student registration through public endpoint
-    const userRole = role === 'teacher' || role === 'admin' ? 'student' : (role || 'student');
+    // Allow student and teacher registration, but not admin (admin must be created manually)
+    const userRole = role === 'admin' ? 'student' : (role || 'student');
 
-    const user = new User({
+    // Build user object
+    const userData = {
       name,
       email,
       password,
-      year,
       university,
       role: userRole
-    });
+    };
+
+    // Add student-specific fields
+    if (userRole === 'student') {
+      userData.year = year;
+    }
+
+    // Add teacher-specific fields
+    if (userRole === 'teacher') {
+      userData.teacherProfile = {
+        specialization: specialization || '',
+        bio: bio || '',
+        qualifications: []
+      };
+    }
+
+    const user = new User(userData);
     await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -39,7 +55,8 @@ router.post('/register', async (req, res) => {
         email: user.email,
         year: user.year,
         university: user.university,
-        role: user.role
+        role: user.role,
+        teacherProfile: user.teacherProfile
       }
     });
   } catch (error) {
