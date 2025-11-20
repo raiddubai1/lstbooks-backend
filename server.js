@@ -41,6 +41,7 @@ import resourceRoutes from './routes/resources.js';
 import coursePlanRoutes from './routes/coursePlans.js';
 import treatmentProtocolRoutes from './routes/treatmentProtocols.js';
 import aiQuizGeneratorRoutes from './routes/aiQuizGenerator.js';
+import spacedRepetitionRoutes from './routes/spacedRepetition.js';
 
 dotenv.config();
 
@@ -93,6 +94,7 @@ app.use('/api/resources', resourceRoutes);
 app.use('/api/course-plans', coursePlanRoutes);
 app.use('/api/treatment-protocols', treatmentProtocolRoutes);
 app.use('/api/ai-quiz-generator', aiQuizGeneratorRoutes);
+app.use('/api/spaced-repetition', spacedRepetitionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
