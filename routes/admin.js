@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import Subject from '../models/Subject.js';
 import Quiz from '../models/Quiz.js';
 import Flashcard from '../models/Flashcard.js';
-import OSCEStation from '../models/OSCEStation.js';
+import OSCE from '../models/OSCE.js';
 import Discussion from '../models/Discussion.js';
 import StudyGroup from '../models/StudyGroup.js';
 import UserProgress from '../models/UserProgress.js';
@@ -27,7 +27,7 @@ router.get('/analytics/overview', async (req, res) => {
       totalSubjects,
       totalQuizzes,
       totalFlashcards,
-      totalOSCEStations,
+      totalOSCEs,
       totalDiscussions,
       totalStudyGroups,
       totalAIChatSessions,
@@ -42,7 +42,7 @@ router.get('/analytics/overview', async (req, res) => {
       Subject.countDocuments(),
       Quiz.countDocuments(),
       Flashcard.countDocuments(),
-      OSCEStation.countDocuments(),
+      OSCE.countDocuments(),
       Discussion.countDocuments(),
       StudyGroup.countDocuments(),
       ChatSession.countDocuments(),
@@ -65,7 +65,7 @@ router.get('/analytics/overview', async (req, res) => {
         subjects: totalSubjects,
         quizzes: totalQuizzes,
         flashcards: totalFlashcards,
-        osceStations: totalOSCEStations,
+        osceStations: totalOSCEs,
         discussions: totalDiscussions,
         studyGroups: totalStudyGroups,
         aiChatSessions: totalAIChatSessions

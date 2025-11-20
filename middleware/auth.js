@@ -73,7 +73,7 @@ export const authenticate = async (req, res, next) => {
 export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       // No token provided, continue without user
       return next();
@@ -82,15 +82,59 @@ export const optionalAuth = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (user && user.isActive) {
       req.user = user;
     }
-    
+
     next();
   } catch (error) {
     // If token is invalid, just continue without user
     next();
   }
+};
+
+/**
+ * Require Admin Role Middleware
+ * Must be used after authenticate middleware
+ */
+export const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required.'
+    });
+  }
+
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Admin access required.'
+    });
+  }
+
+  next();
+};
+
+/**
+ * Require Teacher or Admin Role Middleware
+ * Must be used after authenticate middleware
+ */
+export const requireTeacherOrAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required.'
+    });
+  }
+
+  if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Teacher or Admin access required.'
+    });
+  }
+
+  next();
 };
 

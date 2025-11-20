@@ -1,8 +1,17 @@
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize OpenAI client
-const openai = process.env.OPENAI_API_KEY 
+// Determine which AI provider to use
+const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini'; // Default to Gemini (FREE)
+
+// Initialize OpenAI client (if using OpenAI)
+const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
+
+// Initialize Gemini client (if using Gemini)
+const gemini = process.env.GEMINI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
 
 // System prompts for different assistant types
@@ -73,15 +82,76 @@ Case elements to include:
 };
 
 /**
- * Generate AI response using OpenAI API
+ * Generate AI response using configured AI provider (Gemini or OpenAI)
  * @param {Array} messages - Array of message objects with role and content
  * @param {String} assistantType - Type of assistant (study-assistant, osce-coach, case-generator)
  * @returns {Promise<String>} - AI generated response
  */
 export async function generateAIResponse(messages, assistantType = 'study-assistant') {
-  // Check if OpenAI is configured
+  // Route to appropriate AI provider
+  if (AI_PROVIDER === 'gemini') {
+    return generateGeminiResponse(messages, assistantType);
+  } else if (AI_PROVIDER === 'openai') {
+    return generateOpenAIResponse(messages, assistantType);
+  } else {
+    return generateFallbackResponse(assistantType, 'Invalid AI provider configured');
+  }
+}
+
+/**
+ * Generate response using Google Gemini (FREE)
+ */
+async function generateGeminiResponse(messages, assistantType) {
+  if (!gemini) {
+    return generateFallbackResponse(assistantType, 'Gemini API key not configured');
+  }
+
+  try {
+    // Get system prompt for the assistant type
+    const systemPrompt = SYSTEM_PROMPTS[assistantType] || SYSTEM_PROMPTS['study-assistant'];
+
+    // Get the Gemini model
+    const model = gemini.getGenerativeModel({
+      model: 'gemini-1.5-flash', // Fast and FREE
+      systemInstruction: systemPrompt
+    });
+
+    // Build conversation history for Gemini
+    const chatHistory = messages.slice(0, -1).map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+
+    // Get the latest user message
+    const latestMessage = messages[messages.length - 1].content;
+
+    // Start chat with history
+    const chat = model.startChat({
+      history: chatHistory,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1000,
+        topP: 0.95,
+      }
+    });
+
+    // Send message and get response
+    const result = await chat.sendMessage(latestMessage);
+    const response = await result.response;
+    return response.text();
+
+  } catch (error) {
+    console.error('Gemini API Error:', error.message);
+    return generateFallbackResponse(assistantType, error.message);
+  }
+}
+
+/**
+ * Generate response using OpenAI (Paid)
+ */
+async function generateOpenAIResponse(messages, assistantType) {
   if (!openai) {
-    return generateFallbackResponse(assistantType);
+    return generateFallbackResponse(assistantType, 'OpenAI API key not configured');
   }
 
   try {
@@ -99,10 +169,10 @@ export async function generateAIResponse(messages, assistantType = 'study-assist
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Using GPT-4o-mini for cost efficiency, can upgrade to gpt-4o for better quality
+      model: 'gpt-4o-mini',
       messages: apiMessages,
-      temperature: 0.7, // Balanced between creativity and consistency
-      max_tokens: 1000, // Limit response length
+      temperature: 0.7,
+      max_tokens: 1000,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0
@@ -111,24 +181,22 @@ export async function generateAIResponse(messages, assistantType = 'study-assist
     return completion.choices[0].message.content;
   } catch (error) {
     console.error('OpenAI API Error:', error.message);
-    
-    // If API fails, return fallback response
     return generateFallbackResponse(assistantType, error.message);
   }
 }
 
 /**
- * Generate fallback response when OpenAI is not available
+ * Generate fallback response when AI is not available
  */
 function generateFallbackResponse(assistantType, errorMessage = null) {
   const responses = {
-    'study-assistant': "I'm here to help you with your dental studies! However, the AI service is currently unavailable. Please make sure the OpenAI API key is configured correctly.",
-    'osce-coach': "I'm your OSCE coach! However, the AI service is currently unavailable. Please make sure the OpenAI API key is configured correctly.",
-    'case-generator': "I can generate clinical cases for you! However, the AI service is currently unavailable. Please make sure the OpenAI API key is configured correctly."
+    'study-assistant': "I'm here to help you with your dental studies! However, the AI service is currently unavailable. Please make sure the API key is configured correctly in the backend .env file.",
+    'osce-coach': "I'm your OSCE coach! However, the AI service is currently unavailable. Please make sure the API key is configured correctly in the backend .env file.",
+    'case-generator': "I can generate clinical cases for you! However, the AI service is currently unavailable. Please make sure the API key is configured correctly in the backend .env file."
   };
 
   let response = responses[assistantType] || responses['study-assistant'];
-  
+
   if (errorMessage && process.env.NODE_ENV === 'development') {
     response += `\n\nError details: ${errorMessage}`;
   }
@@ -137,32 +205,70 @@ function generateFallbackResponse(assistantType, errorMessage = null) {
 }
 
 /**
- * Check if OpenAI API is configured and working
+ * Check if AI service is configured and working
  */
 export async function checkAIServiceHealth() {
-  if (!openai) {
-    return {
-      status: 'not_configured',
-      message: 'OpenAI API key is not configured'
-    };
-  }
+  const provider = AI_PROVIDER;
 
-  try {
-    // Test with a simple completion
-    await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: 'test' }],
-      max_tokens: 5
-    });
+  if (provider === 'gemini') {
+    if (!gemini) {
+      return {
+        status: 'not_configured',
+        provider: 'gemini',
+        message: 'Gemini API key is not configured'
+      };
+    }
 
-    return {
-      status: 'healthy',
-      message: 'AI service is working correctly'
-    };
-  } catch (error) {
+    try {
+      const model = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const result = await model.generateContent('test');
+      await result.response;
+
+      return {
+        status: 'healthy',
+        provider: 'gemini',
+        message: 'Gemini AI service is working correctly (FREE - 1500 requests/day)'
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        provider: 'gemini',
+        message: error.message
+      };
+    }
+  } else if (provider === 'openai') {
+    if (!openai) {
+      return {
+        status: 'not_configured',
+        provider: 'openai',
+        message: 'OpenAI API key is not configured'
+      };
+    }
+
+    try {
+      await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: 'test' }],
+        max_tokens: 5
+      });
+
+      return {
+        status: 'healthy',
+        provider: 'openai',
+        message: 'OpenAI service is working correctly'
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        provider: 'openai',
+        message: error.message
+      };
+    }
+  } else {
     return {
       status: 'error',
-      message: error.message
+      provider: 'unknown',
+      message: `Invalid AI provider: ${provider}`
     };
   }
 }
