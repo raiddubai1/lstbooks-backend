@@ -37,6 +37,7 @@ import challengeRoutes from './routes/challenges.js';
 import adminRoutes from './routes/admin.js';
 import studentPerformanceRoutes from './routes/studentPerformance.js';
 import teacherAnalyticsRoutes from './routes/teacherAnalytics.js';
+import resourceRoutes from './routes/resources.js';
 
 dotenv.config();
 
@@ -85,6 +86,7 @@ app.use('/api/challenges', challengeRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/student-performance', studentPerformanceRoutes);
 app.use('/api/teacher-analytics', teacherAnalyticsRoutes);
+app.use('/api/resources', resourceRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
