@@ -27,6 +27,7 @@ import aiChatRoutes from './routes/aiChat.js';
 import gamificationRoutes from './routes/gamification.js';
 import achievementRoutes from './routes/achievements.js';
 import challengeRoutes from './routes/challenges.js';
+import adminRoutes from './routes/admin.js';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
