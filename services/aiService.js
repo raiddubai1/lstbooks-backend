@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getRelevantContent, formatContentForAI } from './contentRecommendationService.js';
+import StudentPerformance from '../models/StudentPerformance.js';
 
 // Determine which AI provider to use
 const AI_PROVIDER = process.env.AI_PROVIDER || 'gemini'; // Default to Gemini (FREE)
@@ -259,14 +261,15 @@ Remember: Your goal is not just to test knowledge, but to develop confident, com
  * Generate AI response using configured AI provider (Gemini or OpenAI)
  * @param {Array} messages - Array of message objects with role and content
  * @param {String} assistantType - Type of assistant (study-assistant, osce-coach, case-generator)
+ * @param {Object} context - Additional context (subjectId, topic, etc.)
  * @returns {Promise<String>} - AI generated response
  */
-export async function generateAIResponse(messages, assistantType = 'study-assistant') {
+export async function generateAIResponse(messages, assistantType = 'study-assistant', context = {}) {
   // Route to appropriate AI provider
   if (AI_PROVIDER === 'gemini') {
-    return generateGeminiResponse(messages, assistantType);
+    return generateGeminiResponse(messages, assistantType, context);
   } else if (AI_PROVIDER === 'openai') {
-    return generateOpenAIResponse(messages, assistantType);
+    return generateOpenAIResponse(messages, assistantType, context);
   } else {
     return generateFallbackResponse(assistantType, 'Invalid AI provider configured');
   }
@@ -275,14 +278,36 @@ export async function generateAIResponse(messages, assistantType = 'study-assist
 /**
  * Generate response using Google Gemini (FREE)
  */
-async function generateGeminiResponse(messages, assistantType) {
+async function generateGeminiResponse(messages, assistantType, context = {}) {
   if (!gemini) {
     return generateFallbackResponse(assistantType, 'Gemini API key not configured');
   }
 
   try {
     // Get system prompt for the assistant type
-    const systemPrompt = SYSTEM_PROMPTS[assistantType] || SYSTEM_PROMPTS['study-assistant'];
+    let systemPrompt = SYSTEM_PROMPTS[assistantType] || SYSTEM_PROMPTS['study-assistant'];
+
+    // 🎯 ENHANCE PROMPT WITH RELEVANT CONTENT
+    const latestMessage = messages[messages.length - 1].content;
+    const relevantContent = await getRelevantContent(
+      latestMessage,
+      context.subjectId,
+      3 // Limit to 3 items per category
+    );
+
+    // Add content recommendations to system prompt if available
+    const contentContext = formatContentForAI(relevantContent);
+    if (contentContext) {
+      systemPrompt += contentContext;
+    }
+
+    // 📊 ENHANCE PROMPT WITH STUDENT PERFORMANCE DATA
+    if (context.userId) {
+      const performanceContext = await getStudentPerformanceContext(context.userId);
+      if (performanceContext) {
+        systemPrompt += performanceContext;
+      }
+    }
 
     // Get the Gemini model
     const model = gemini.getGenerativeModel({
@@ -295,9 +320,6 @@ async function generateGeminiResponse(messages, assistantType) {
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.content }]
     }));
-
-    // Get the latest user message
-    const latestMessage = messages[messages.length - 1].content;
 
     // Start chat with history
     const chat = model.startChat({
@@ -323,14 +345,36 @@ async function generateGeminiResponse(messages, assistantType) {
 /**
  * Generate response using OpenAI (Paid)
  */
-async function generateOpenAIResponse(messages, assistantType) {
+async function generateOpenAIResponse(messages, assistantType, context = {}) {
   if (!openai) {
     return generateFallbackResponse(assistantType, 'OpenAI API key not configured');
   }
 
   try {
     // Get system prompt for the assistant type
-    const systemPrompt = SYSTEM_PROMPTS[assistantType] || SYSTEM_PROMPTS['study-assistant'];
+    let systemPrompt = SYSTEM_PROMPTS[assistantType] || SYSTEM_PROMPTS['study-assistant'];
+
+    // 🎯 ENHANCE PROMPT WITH RELEVANT CONTENT
+    const latestMessage = messages[messages.length - 1].content;
+    const relevantContent = await getRelevantContent(
+      latestMessage,
+      context.subjectId,
+      3 // Limit to 3 items per category
+    );
+
+    // Add content recommendations to system prompt if available
+    const contentContext = formatContentForAI(relevantContent);
+    if (contentContext) {
+      systemPrompt += contentContext;
+    }
+
+    // 📊 ENHANCE PROMPT WITH STUDENT PERFORMANCE DATA
+    if (context.userId) {
+      const performanceContext = await getStudentPerformanceContext(context.userId);
+      if (performanceContext) {
+        systemPrompt += performanceContext;
+      }
+    }
 
     // Prepare messages for OpenAI API
     const apiMessages = [
@@ -356,6 +400,65 @@ async function generateOpenAIResponse(messages, assistantType) {
   } catch (error) {
     console.error('OpenAI API Error:', error.message);
     return generateFallbackResponse(assistantType, error.message);
+  }
+}
+
+/**
+ * Get student performance context for AI personalization
+ */
+async function getStudentPerformanceContext(userId) {
+  try {
+    const performance = await StudentPerformance.findOne({ user: userId })
+      .populate('weakAreas.subject', 'name')
+      .populate('strongAreas.subject', 'name')
+      .lean();
+
+    if (!performance) {
+      return null;
+    }
+
+    const sections = [];
+
+    // Add overall stats
+    if (performance.overallStats) {
+      sections.push(`\n\n👤 STUDENT PROFILE:
+- Quizzes taken: ${performance.overallStats.totalQuizzesTaken}
+- Average score: ${performance.overallStats.averageQuizScore}%
+- Study time: ${performance.overallStats.totalStudyTime} minutes
+- Current streak: ${performance.overallStats.currentStreak} days
+- Learning level: ${performance.learningProfile?.difficultyLevel || 'beginner'}`);
+    }
+
+    // Add weak areas
+    if (performance.weakAreas?.length > 0) {
+      const weakTopics = performance.weakAreas.slice(0, 5).map(w =>
+        `  - ${w.topic} (${w.averageScore}%)`
+      ).join('\n');
+      sections.push(`\n⚠️ WEAK AREAS (Need extra focus):\n${weakTopics}`);
+    }
+
+    // Add strong areas
+    if (performance.strongAreas?.length > 0) {
+      const strongTopics = performance.strongAreas.slice(0, 3).map(s =>
+        `  - ${s.topic} (${s.averageScore}%)`
+      ).join('\n');
+      sections.push(`\n✅ STRONG AREAS:\n${strongTopics}`);
+    }
+
+    if (sections.length === 0) {
+      return null;
+    }
+
+    return sections.join('\n') + `\n\n💡 PERSONALIZATION INSTRUCTIONS:
+- Focus more on weak areas when explaining concepts
+- Provide extra practice for topics with low scores
+- Acknowledge and build on strong areas
+- Adapt difficulty to ${performance.learningProfile?.difficultyLevel || 'beginner'} level
+- Encourage consistent study habits (current streak: ${performance.overallStats?.currentStreak || 0} days)`;
+
+  } catch (error) {
+    console.error('Error getting student performance context:', error);
+    return null;
   }
 }
 

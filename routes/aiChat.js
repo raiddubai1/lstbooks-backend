@@ -131,8 +131,16 @@ router.post('/sessions/:id/message', authenticate, async (req, res) => {
     // Add user message
     await session.addMessage('user', content);
 
-    // Generate AI response using OpenAI
-    const aiResponse = await generateAIResponse(session.messages, session.assistantType);
+    // Build context for AI (subject, topic, user performance, etc.)
+    const context = {
+      userId: req.user._id,
+      subjectId: session.subject,
+      topic: session.topic,
+      yearId: session.year
+    };
+
+    // Generate AI response with content recommendations and personalization
+    const aiResponse = await generateAIResponse(session.messages, session.assistantType, context);
 
     // Add AI response
     await session.addMessage('assistant', aiResponse);

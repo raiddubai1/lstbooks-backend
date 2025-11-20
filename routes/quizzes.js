@@ -1,6 +1,7 @@
 import express from 'express';
 import Quiz from '../models/Quiz.js';
 import QuizAttempt from '../models/QuizAttempt.js';
+import StudentPerformance from '../models/StudentPerformance.js';
 import { v4 as uuidv4 } from 'uuid';
 import { authenticate, optionalAuth } from '../middleware/auth.js';
 import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
@@ -288,6 +289,30 @@ router.post('/:id/submit', async (req, res) => {
     attempt.isTimedOut = timedOut || false;
 
     await attempt.save();
+
+    // 📊 TRACK STUDENT PERFORMANCE
+    if (attempt.userId) {
+      try {
+        const performance = await StudentPerformance.getOrCreate(attempt.userId);
+        const correctCount = evaluatedAnswers.filter(a => a.correct).length;
+
+        // Extract topic from quiz title (simple heuristic)
+        const topic = quiz.title.split('-')[0].trim();
+
+        await performance.addQuizResult(
+          quiz._id,
+          percent,
+          quiz.questions.length,
+          correctCount,
+          durationSec,
+          topic,
+          quiz.subjectId
+        );
+      } catch (perfError) {
+        console.error('Error tracking performance:', perfError);
+        // Don't fail the quiz submission if performance tracking fails
+      }
+    }
 
     res.json({
       attemptId: attempt._id,
