@@ -255,7 +255,7 @@ async function generateGeminiResponse(messages, assistantType) {
       history: chatHistory,
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1000,
+        maxOutputTokens: 2500, // Increased for comprehensive clinical cases
         topP: 0.95,
       }
     });
@@ -297,7 +297,7 @@ async function generateOpenAIResponse(messages, assistantType) {
       model: 'gpt-4o-mini',
       messages: apiMessages,
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 2500, // Increased for comprehensive clinical cases
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0
