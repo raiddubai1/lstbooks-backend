@@ -1,6 +1,7 @@
 import express from 'express';
 import SharedResource from '../models/SharedResource.js';
 import { authenticate, requireTeacherOrAdmin } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -105,18 +106,37 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create shared resource
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, upload.single('file'), async (req, res) => {
   try {
-    const resource = new SharedResource({
+    const resourceData = {
       ...req.body,
       author: req.user._id
-    });
-    
+    };
+
+    // Parse tags if it's a string (from FormData)
+    if (typeof req.body.tags === 'string') {
+      try {
+        resourceData.tags = JSON.parse(req.body.tags);
+      } catch (e) {
+        resourceData.tags = [];
+      }
+    }
+
+    // If a file was uploaded, add file information
+    if (req.file) {
+      resourceData.fileUrl = `/uploads/${req.file.filename}`;
+      resourceData.fileName = req.file.originalname;
+      resourceData.fileSize = req.file.size;
+      resourceData.mimeType = req.file.mimetype;
+    }
+
+    const resource = new SharedResource(resourceData);
+
     await resource.save();
     await resource.populate('author', 'name email');
     await resource.populate('subject', 'name');
     await resource.populate('year', 'name');
-    
+
     res.status(201).json(resource);
   } catch (error) {
     res.status(400).json({ error: error.message });
