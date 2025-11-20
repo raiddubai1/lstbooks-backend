@@ -112,7 +112,7 @@ async function generateGeminiResponse(messages, assistantType) {
 
     // Get the Gemini model
     const model = gemini.getGenerativeModel({
-      model: 'gemini-1.5-flash', // Fast and FREE
+      model: 'gemini-flash-latest', // Latest stable Gemini Flash model - Fast and FREE
       systemInstruction: systemPrompt
     });
 
