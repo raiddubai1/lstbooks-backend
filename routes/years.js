@@ -3,6 +3,10 @@ import Year from '../models/Year.js';
 import Subject from '../models/Subject.js';
 import Quiz from '../models/Quiz.js';
 import { Deck } from '../models/SpacedRepetition.js';
+import Book from '../models/Book.js';
+import PastPaper from '../models/PastPaper.js';
+import Photo from '../models/Photo.js';
+import TreatmentProtocol from '../models/TreatmentProtocol.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 
@@ -48,7 +52,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get year by ID with subjects (public)
+// Get year by ID with subjects and all related resources (public)
 router.get('/:id', async (req, res) => {
   try {
     const year = await Year.findById(req.params.id);
@@ -59,19 +63,86 @@ router.get('/:id', async (req, res) => {
     // Get all subjects for this year
     const subjects = await Subject.find({ yearId: year._id }).sort({ name: 1 });
     const subjectIds = subjects.map(s => s._id);
+    const subjectNames = subjects.map(s => s.name);
 
-    // Calculate stats
-    const [totalQuizzes, totalFlashcards] = await Promise.all([
-      Quiz.countDocuments({ subjectId: { $in: subjectIds }, isPublic: true }),
-      Deck.countDocuments({ subject: { $in: subjectIds }, isPublic: true })
+    // Map year name to academicYear format used in PastPaper model
+    const yearNameMap = {
+      'Foundation Year': 'Foundation Year',
+      'Year 1': 'Year 1',
+      'Year 2': 'Year 2',
+      'Year 3': 'Year 3',
+      'Year 4': 'Year 4',
+      'Year 5': 'Year 5'
+    };
+    const academicYear = yearNameMap[year.name] || 'All Years';
+
+    // Fetch all related resources from different collections in parallel
+    const [books, pastPapers, photos, protocols, quizzes, flashcardDecks] = await Promise.all([
+      // Books: match by category (subject names)
+      Book.find({
+        category: { $in: subjectNames },
+        available: true
+      })
+        .select('title author category coverImage pages')
+        .limit(20)
+        .sort({ createdAt: -1 }),
+
+      // Past Papers: match by academicYear field
+      PastPaper.find({
+        academicYear: academicYear
+      })
+        .select('title subject year semester examType fileUrl')
+        .limit(20)
+        .sort({ year: -1, createdAt: -1 }),
+
+      // Photos: match by category (subject names)
+      Photo.find({
+        category: { $in: subjectNames }
+      })
+        .select('title category imageUrl thumbnailUrl')
+        .limit(20)
+        .sort({ createdAt: -1 }),
+
+      // Treatment Protocols: match by category (subject names)
+      TreatmentProtocol.find({
+        category: { $in: subjectNames }
+      })
+        .select('title category difficulty estimatedTime thumbnailUrl')
+        .limit(20)
+        .sort({ createdAt: -1 }),
+
+      // Quizzes: match by subjectId
+      Quiz.find({
+        subjectId: { $in: subjectIds },
+        isPublic: true
+      })
+        .select('title description difficulty year questions createdBy isAIGenerated')
+        .populate('createdBy', 'name')
+        .limit(20)
+        .sort({ createdAt: -1 }),
+
+      // Flashcard Decks: match by subject reference
+      Deck.find({
+        subject: { $in: subjectIds },
+        isPublic: true
+      })
+        .select('name description category totalCards owner')
+        .populate('owner', 'name')
+        .limit(20)
+        .sort({ createdAt: -1 })
     ]);
 
     const yearObj = year.toObject();
     yearObj.stats = {
       ...yearObj.stats,
       totalSubjects: subjects.length,
-      totalQuizzes,
-      totalFlashcards,
+      totalQuizzes: quizzes.length,
+      totalFlashcards: flashcardDecks.length,
+      totalBooks: books.length,
+      totalPastPapers: pastPapers.length,
+      totalPhotos: photos.length,
+      totalProtocols: protocols.length,
+      totalResources: books.length + pastPapers.length + photos.length + protocols.length + quizzes.length + flashcardDecks.length,
       totalLabs: 0,
       totalOSCE: 0,
       totalSkills: 0,
@@ -80,7 +151,15 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       ...yearObj,
-      subjects
+      subjects,
+      relatedResources: {
+        books,
+        pastPapers,
+        photos,
+        protocols,
+        quizzes,
+        flashcardDecks
+      }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
