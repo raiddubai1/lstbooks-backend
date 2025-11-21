@@ -6,7 +6,15 @@ const execPromise = promisify(exec);
 const scripts = [
   { name: 'Revision Notes', file: 'scripts/seedRevisionNotes.js' },
   { name: 'Study Plans', file: 'scripts/seedStudyPlans.js' },
-  { name: 'Videos', file: 'scripts/seedVideos.js' }
+  { name: 'Videos', file: 'scripts/seedVideos.js' },
+  { name: 'Books', file: 'scripts/seedBooks.js' },
+  { name: 'Past Papers', file: 'scripts/seedPastPapers.js' },
+  { name: 'Clinical Photos', file: 'scripts/seedPhotos.js' },
+  { name: 'Treatment Protocols', file: 'scripts/seedTreatmentProtocols.js' },
+  { name: 'Quizzes', file: 'scripts/seedQuizzes.js' },
+  { name: 'Flashcards', file: 'scripts/seedFlashcards.js' },
+  { name: 'OSCE Stations', file: 'scripts/seedOSCEStations.js' },
+  { name: 'Lab Procedures', file: 'scripts/seedLabs.js' }
 ];
 
 async function runScript(scriptFile) {
@@ -40,11 +48,19 @@ async function seedAll() {
   console.log('🎉 ALL CONTENT SEEDED SUCCESSFULLY!');
   console.log('═══════════════════════════════════════════════════');
   console.log('\n📊 Summary:');
-  console.log('   ✅ Revision Notes - Real dental education content');
-  console.log('   ✅ Study Plans - 30-day structured learning paths');
-  console.log('   ✅ Videos - Professional dental procedure videos');
-  console.log('\n🚀 Your lstBooks platform now has REAL, VALUABLE content!');
-  console.log('   Students can start learning immediately.\n');
+  console.log('   ✅ Revision Notes - 4 comprehensive notes');
+  console.log('   ✅ Study Plans - 2 structured 21-30 day plans');
+  console.log('   ✅ Videos - 4 professional procedure videos');
+  console.log('   ✅ Books - 10 essential dental textbooks');
+  console.log('   ✅ Past Papers - 8 exam papers with solutions');
+  console.log('   ✅ Clinical Photos - 10 clinical case images');
+  console.log('   ✅ Treatment Protocols - 3 detailed step-by-step guides');
+  console.log('   ✅ Quizzes - Multiple practice quizzes');
+  console.log('   ✅ Flashcards - Comprehensive flashcard sets');
+  console.log('   ✅ OSCE Stations - Clinical examination scenarios');
+  console.log('   ✅ Lab Procedures - Laboratory technique guides');
+  console.log('\n🚀 Your lstBooks platform now has COMPLETE, REAL CONTENT!');
+  console.log('   Students can start learning immediately with professional-grade materials.\n');
 }
 
 seedAll();

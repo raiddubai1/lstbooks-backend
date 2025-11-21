@@ -5,10 +5,12 @@ import Subject from '../models/Subject.js';
 
 dotenv.config();
 
+const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/lstbooks';
+
 const seedFlashcards = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('📦 Connected to MongoDB');
+    await mongoose.connect(MONGODB_URI);
+    console.log('✅ Connected to MongoDB');
 
     // Clear existing flashcards
     await Flashcard.deleteMany({});

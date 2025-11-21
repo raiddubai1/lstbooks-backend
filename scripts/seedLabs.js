@@ -5,11 +5,13 @@ import Subject from '../models/Subject.js';
 
 dotenv.config();
 
+const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/lstbooks';
+
 const seedLabs = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/lstbooks');
-    console.log('📦 Connected to MongoDB');
+    await mongoose.connect(MONGODB_URI);
+    console.log('✅ Connected to MongoDB');
 
     // Get existing subjects
     const subjects = await Subject.find({});
