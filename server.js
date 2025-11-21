@@ -36,7 +36,8 @@ import treatmentProtocolRoutes from './routes/treatmentProtocols.js';
 import aiQuizGeneratorRoutes from './routes/aiQuizGenerator.js';
 import aiFlashcardGeneratorRoutes from './routes/aiFlashcardGenerator.js';
 import spacedRepetitionRoutes from './routes/spacedRepetition.js';
-import { startKeepAlive } from './keepAlive.js';
+import revisionNoteRoutes from './routes/revisionNotes.js';
+import { startKeepAlive} from './keepAlive.js';
 
 dotenv.config();
 
@@ -84,6 +85,7 @@ app.use('/api/treatment-protocols', treatmentProtocolRoutes);
 app.use('/api/ai-quiz-generator', aiQuizGeneratorRoutes);
 app.use('/api/ai-flashcard-generator', aiFlashcardGeneratorRoutes);
 app.use('/api/spaced-repetition', spacedRepetitionRoutes);
+app.use('/api/revision-notes', revisionNoteRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
