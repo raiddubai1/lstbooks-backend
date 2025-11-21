@@ -129,21 +129,27 @@ router.post('/create-quiz', authenticate, async (req, res) => {
  */
 function generateSampleQuestions(topic, difficulty, count, types, includeExplanations) {
   const questions = [];
-  const questionTemplates = getQuestionTemplates(topic, difficulty);
+  const baseTemplates = getQuestionTemplates(topic, difficulty);
 
-  for (let i = 0; i < Math.min(count, questionTemplates.length); i++) {
-    const template = questionTemplates[i];
+  // Generate the requested number of questions by cycling through templates
+  for (let i = 0; i < count; i++) {
+    const template = baseTemplates[i % baseTemplates.length];
     const questionType = types[i % types.length];
 
+    // Map question type to Quiz model enum values
+    const modelType = questionType === 'multiple-choice' ? 'MCQ' : 'ShortAnswer';
+
     const question = {
-      question: template.question,
-      type: questionType,
+      questionText: template.question,
+      type: modelType,
+      options: template.options || [],
+      answer: template.answer,
       points: difficulty === 'hard' ? 3 : difficulty === 'medium' ? 2 : 1,
-      ...template
+      resources: []
     };
 
-    if (includeExplanations) {
-      question.explanation = template.explanation || `This question tests your understanding of ${topic}.`;
+    if (includeExplanations && template.explanation) {
+      question.explanation = template.explanation;
     }
 
     questions.push(question);
@@ -167,7 +173,7 @@ function getQuestionTemplates(topic, difficulty) {
         'Esthetic improvement',
         'All of the above'
       ],
-      correctAnswer: 3,
+      answer: 'All of the above',
       explanation: `${topic} can be indicated for various reasons including caries, fractures, and esthetics.`
     },
     {
@@ -178,8 +184,96 @@ function getQuestionTemplates(topic, difficulty) {
         'Glass ionomer',
         'Depends on the case'
       ],
-      correctAnswer: 3,
+      answer: 'Depends on the case',
       explanation: 'Material selection depends on various clinical factors.'
+    },
+    {
+      question: `What is the most important consideration when performing ${topic}?`,
+      options: [
+        'Patient comfort',
+        'Proper technique',
+        'Sterile environment',
+        'All are equally important'
+      ],
+      answer: 'All are equally important',
+      explanation: 'All factors contribute to successful treatment outcomes.'
+    },
+    {
+      question: `Which of the following is a contraindication for ${topic}?`,
+      options: [
+        'Severe periodontal disease',
+        'Uncontrolled diabetes',
+        'Poor oral hygiene',
+        'All of the above'
+      ],
+      answer: 'All of the above',
+      explanation: 'These conditions can compromise treatment success.'
+    },
+    {
+      question: `What is the recommended follow-up period after ${topic}?`,
+      options: [
+        '1 week',
+        '2 weeks',
+        '1 month',
+        'Depends on the case'
+      ],
+      answer: 'Depends on the case',
+      explanation: 'Follow-up timing varies based on individual patient needs.'
+    },
+    {
+      question: `Which diagnostic tool is most useful for evaluating ${topic}?`,
+      options: [
+        'Radiograph',
+        'Clinical examination',
+        'Patient history',
+        'All of the above'
+      ],
+      answer: 'All of the above',
+      explanation: 'Comprehensive diagnosis requires multiple assessment methods.'
+    },
+    {
+      question: `What is the success rate of ${topic} when performed correctly?`,
+      options: [
+        '60-70%',
+        '70-80%',
+        '80-90%',
+        '90-95%'
+      ],
+      answer: '90-95%',
+      explanation: 'Proper technique and patient compliance lead to high success rates.'
+    },
+    {
+      question: `Which complication is most commonly associated with ${topic}?`,
+      options: [
+        'Infection',
+        'Pain',
+        'Swelling',
+        'All can occur'
+      ],
+      answer: 'All can occur',
+      explanation: 'Various complications may arise depending on individual cases.'
+    },
+    {
+      question: `What patient education is essential before ${topic}?`,
+      options: [
+        'Post-operative care',
+        'Expected outcomes',
+        'Potential risks',
+        'All of the above'
+      ],
+      answer: 'All of the above',
+      explanation: 'Comprehensive patient education improves compliance and outcomes.'
+    },
+    {
+      question: `Which factor most influences the prognosis of ${topic}?`,
+      options: [
+        'Patient age',
+        'Overall health',
+        'Oral hygiene',
+        'All factors combined'
+      ],
+      answer: 'All factors combined',
+      explanation: 'Multiple factors interact to determine treatment success.'
     }
   ];
 
