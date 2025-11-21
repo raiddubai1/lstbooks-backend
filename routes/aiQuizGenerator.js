@@ -8,8 +8,9 @@ const router = express.Router();
 /**
  * POST /api/ai-quiz-generator/generate
  * Generate quiz questions using AI
+ * Available to all authenticated users for self-study
  */
-router.post('/generate', authenticate, requireTeacherOrAdmin, async (req, res) => {
+router.post('/generate', authenticate, async (req, res) => {
   try {
     const {
       topic,
@@ -60,8 +61,10 @@ router.post('/generate', authenticate, requireTeacherOrAdmin, async (req, res) =
 /**
  * POST /api/ai-quiz-generator/create-quiz
  * Generate and save quiz in one step
+ * Available to all authenticated users for self-study
+ * Students create private quizzes, teachers/admins can make them public
  */
-router.post('/create-quiz', authenticate, requireTeacherOrAdmin, async (req, res) => {
+router.post('/create-quiz', authenticate, async (req, res) => {
   try {
     const {
       title,
@@ -84,24 +87,29 @@ router.post('/create-quiz', authenticate, requireTeacherOrAdmin, async (req, res
       includeExplanations
     );
 
+    // Determine if quiz should be public based on user role
+    // Teachers and admins can create public quizzes, students create private quizzes
+    const isPublic = req.user.role === 'teacher' || req.user.role === 'admin';
+
     // Create quiz
     const quiz = new Quiz({
       title: title || `AI Generated Quiz: ${topic}`,
       description: `Auto-generated quiz on ${topic} with ${generatedQuestions.length} questions`,
-      subject,
+      subjectId: subject,
       year: year || 'All',
       difficulty: difficulty || 'medium',
       questions: generatedQuestions,
       timeLimit: timeLimit || 30,
       passingScore: 70,
       createdBy: req.user._id,
-      isAIGenerated: true
+      isAIGenerated: true,
+      isPublic: isPublic
     });
 
     await quiz.save();
 
     const populatedQuiz = await Quiz.findById(quiz._id)
-      .populate('subject', 'name')
+      .populate('subjectId', 'name')
       .populate('createdBy', 'name email')
       .lean();
 

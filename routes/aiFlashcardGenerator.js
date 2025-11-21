@@ -7,8 +7,9 @@ const router = express.Router();
 /**
  * POST /api/ai-flashcard-generator/generate
  * Generate flashcards using AI from a topic or PDF content
+ * Available to all authenticated users for self-study
  */
-router.post('/generate', authenticate, requireTeacherOrAdmin, async (req, res) => {
+router.post('/generate', authenticate, async (req, res) => {
   try {
     const {
       topic,
@@ -57,8 +58,10 @@ router.post('/generate', authenticate, requireTeacherOrAdmin, async (req, res) =
 /**
  * POST /api/ai-flashcard-generator/create-deck
  * Generate and save flashcards to spaced repetition deck in one step
+ * Available to all authenticated users for self-study
+ * Students create private decks, teachers/admins can make them public
  */
-router.post('/create-deck', authenticate, requireTeacherOrAdmin, async (req, res) => {
+router.post('/create-deck', authenticate, async (req, res) => {
   try {
     const {
       deckName,
@@ -83,6 +86,10 @@ router.post('/create-deck', authenticate, requireTeacherOrAdmin, async (req, res
     // Import SpacedRepetition model
     const SpacedRepetition = (await import('../models/SpacedRepetition.js')).default;
 
+    // Determine if deck should be public based on user role
+    // Teachers and admins can create public decks, students create private decks
+    const shouldBePublic = (req.user.role === 'teacher' || req.user.role === 'admin') && isPublic;
+
     // Create deck with generated cards
     const deck = new SpacedRepetition({
       name: deckName || `AI Generated: ${topic || 'Flashcards'}`,
@@ -96,7 +103,7 @@ router.post('/create-deck', authenticate, requireTeacherOrAdmin, async (req, res
         tags: card.tags || []
       })),
       owner: req.user._id,
-      isPublic: isPublic || false,
+      isPublic: shouldBePublic,
       newCardsPerDay: 20,
       maxReviewsPerDay: 100
     });
