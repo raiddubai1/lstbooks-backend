@@ -38,6 +38,7 @@ import aiFlashcardGeneratorRoutes from './routes/aiFlashcardGenerator.js';
 import spacedRepetitionRoutes from './routes/spacedRepetition.js';
 import revisionNoteRoutes from './routes/revisionNotes.js';
 import studyPlanRoutes from './routes/studyPlans.js';
+import weakAreasRoutes from './routes/weakAreas.js';
 import { startKeepAlive} from './keepAlive.js';
 
 dotenv.config();
@@ -88,6 +89,7 @@ app.use('/api/ai-flashcard-generator', aiFlashcardGeneratorRoutes);
 app.use('/api/spaced-repetition', spacedRepetitionRoutes);
 app.use('/api/revision-notes', revisionNoteRoutes);
 app.use('/api/study-plans', studyPlanRoutes);
+app.use('/api/weak-areas', weakAreasRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
