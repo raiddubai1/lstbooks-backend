@@ -39,6 +39,7 @@ import spacedRepetitionRoutes from './routes/spacedRepetition.js';
 import revisionNoteRoutes from './routes/revisionNotes.js';
 import studyPlanRoutes from './routes/studyPlans.js';
 import weakAreasRoutes from './routes/weakAreas.js';
+import videoRoutes from './routes/videos.js';
 import { startKeepAlive} from './keepAlive.js';
 
 dotenv.config();
@@ -90,6 +91,7 @@ app.use('/api/spaced-repetition', spacedRepetitionRoutes);
 app.use('/api/revision-notes', revisionNoteRoutes);
 app.use('/api/study-plans', studyPlanRoutes);
 app.use('/api/weak-areas', weakAreasRoutes);
+app.use('/api/videos', videoRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
