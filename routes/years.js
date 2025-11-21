@@ -1,16 +1,48 @@
 import express from 'express';
 import Year from '../models/Year.js';
 import Subject from '../models/Subject.js';
+import Quiz from '../models/Quiz.js';
+import { Deck } from '../models/SpacedRepetition.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireTeacherOrAdmin } from '../middleware/roleAuth.js';
 
 const router = express.Router();
 
-// Get all years (public)
+// Get all years (public) with calculated stats
 router.get('/', async (req, res) => {
   try {
     const years = await Year.find({ isActive: true }).sort({ order: 1 });
-    res.json(years);
+
+    // Calculate stats for each year
+    const yearsWithStats = await Promise.all(years.map(async (year) => {
+      const yearObj = year.toObject();
+
+      // Get all subjects for this year
+      const subjects = await Subject.find({ yearId: year._id });
+      const subjectIds = subjects.map(s => s._id);
+
+      // Count quizzes and flashcard decks for these subjects
+      const [totalQuizzes, totalFlashcards] = await Promise.all([
+        Quiz.countDocuments({ subjectId: { $in: subjectIds }, isPublic: true }),
+        Deck.countDocuments({ subject: { $in: subjectIds }, isPublic: true })
+      ]);
+
+      // Update stats
+      yearObj.stats = {
+        ...yearObj.stats,
+        totalSubjects: subjects.length,
+        totalQuizzes,
+        totalFlashcards,
+        totalLabs: 0, // Not implemented yet
+        totalOSCE: 0, // Not implemented yet
+        totalSkills: 0, // Not implemented yet
+        totalStudents: 0 // Not tracked yet
+      };
+
+      return yearObj;
+    }));
+
+    res.json(yearsWithStats);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -26,9 +58,28 @@ router.get('/:id', async (req, res) => {
 
     // Get all subjects for this year
     const subjects = await Subject.find({ yearId: year._id }).sort({ name: 1 });
+    const subjectIds = subjects.map(s => s._id);
+
+    // Calculate stats
+    const [totalQuizzes, totalFlashcards] = await Promise.all([
+      Quiz.countDocuments({ subjectId: { $in: subjectIds }, isPublic: true }),
+      Deck.countDocuments({ subject: { $in: subjectIds }, isPublic: true })
+    ]);
+
+    const yearObj = year.toObject();
+    yearObj.stats = {
+      ...yearObj.stats,
+      totalSubjects: subjects.length,
+      totalQuizzes,
+      totalFlashcards,
+      totalLabs: 0,
+      totalOSCE: 0,
+      totalSkills: 0,
+      totalStudents: 0
+    };
 
     res.json({
-      ...year.toObject(),
+      ...yearObj,
       subjects
     });
   } catch (error) {
