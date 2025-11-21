@@ -148,7 +148,7 @@ router.delete('/decks/:id', authenticate, async (req, res) => {
     console.error('Error deleting deck:', error);
     res.status(500).json({ error: error.message });
   }
-
+});
 
 /**
  * GET /api/spaced-repetition/decks/:id/due-cards

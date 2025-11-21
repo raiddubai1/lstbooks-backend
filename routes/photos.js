@@ -1,6 +1,6 @@
 import express from 'express';
 import Photo from '../models/Photo.js';
-import auth from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -136,7 +136,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new photo
-router.post('/', auth, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     const photo = new Photo({
       ...req.body,
@@ -151,7 +151,7 @@ router.post('/', auth, async (req, res) => {
 });
 
 // Update photo
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', authenticate, async (req, res) => {
   try {
     const photo = await Photo.findByIdAndUpdate(
       req.params.id,
@@ -169,7 +169,7 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 // Delete photo
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     const photo = await Photo.findByIdAndDelete(req.params.id);
     if (!photo) {
@@ -201,7 +201,7 @@ router.post('/:id/view', async (req, res) => {
 });
 
 // Like photo
-router.post('/:id/like', auth, async (req, res) => {
+router.post('/:id/like', authenticate, async (req, res) => {
   try {
     const photo = await Photo.findByIdAndUpdate(
       req.params.id,

@@ -42,6 +42,7 @@ import coursePlanRoutes from './routes/coursePlans.js';
 import treatmentProtocolRoutes from './routes/treatmentProtocols.js';
 import aiQuizGeneratorRoutes from './routes/aiQuizGenerator.js';
 import spacedRepetitionRoutes from './routes/spacedRepetition.js';
+import { startKeepAlive } from './keepAlive.js';
 
 dotenv.config();
 
@@ -118,5 +119,8 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📚 lstBooks API ready at http://localhost:${PORT}/api`);
+
+  // Start keep-alive service (only in production)
+  startKeepAlive();
 });
 
